@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Espaços da SRA</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg:        #F7F5F0;
+            --surface:   #FFFFFF;
+            --panel:     #F2EFE9;
+            --gold:      #B8975A;
+            --gold-lt:   #D4B87A;
+            --gold-dim:  #EDE3CF;
+            --text:      #1A1814;
+            --muted:     #7A766E;
+            --border:    #E2DDD4;
+            --green:     #5FCB6B;
+            --green-bg:  #EAF5EA;
+            --green-bdr: #6DB86D;
+            --red:       #C0392B;
+            --shadow:    0 2px 16px rgba(0,0,0,0.07);
+            --radius:    14px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+            height: 100%;
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* ── VIDEO BACKGROUND ─── */
+        .video-bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            z-index: -2;
+        }
+        .overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(247, 245, 240, 0.6);
+            z-index: -1;
+        }
+
+        /* ── SHELL ─── */
+        .shell {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* ── HEADER ─── */
+        header {
+            background: rgba(26, 24, 20, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .brand { display: flex; align-items: center; gap: 10px; }
+        .brand-bar { width: 3px; height: 30px; background: linear-gradient(180deg, var(--gold), var(--gold-lt)); border-radius: 2px; flex-shrink: 0; }
+        .brand h1 { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 600; color: #fff; letter-spacing: .02em; }
+        .brand p { font-size: 9px; color: var(--gold-lt); letter-spacing: .12em; text-transform: uppercase; margin-top: 2px; }
+
+        .header-right { display: flex; align-items: center; gap: 10px; }
+
+        .live-dot {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 10px; font-weight: 500; color: var(--gold-lt);
+            letter-spacing: .06em; text-transform: uppercase;
+        }
+        .live-dot::before {
+            content: ''; width: 6px; height: 6px;
+            background: var(--green); border-radius: 50%;
+            box-shadow: 0 0 6px var(--green);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+
+        .btn-admin {
+            display: flex; align-items: center; gap: 7px;
+            background: rgba(184,151,90,.18);
+            color: var(--gold-lt);
+            border: 1px solid rgba(184,151,90,.45);
+            padding: 7px 14px;
+            border-radius: 99px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 12px; font-weight: 600;
+            letter-spacing: .06em; text-transform: uppercase;
+            text-decoration: none;
+            transition: background .2s, color .2s;
+            white-space: nowrap;
+        }
+        .btn-admin:active { background: var(--gold); color: #1A1814; }
+
+        /* ── SCROLL CONTENT ─── */
+        .content {
+            flex: 1;
+            padding: 16px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* ── TOP INFO BAR ─── */
+        .info-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(26,24,20,.07);
+            backdrop-filter: blur(8px);
+            border-radius: 10px;
+            padding: 10px 14px;
+            border: 1px solid rgba(184,151,90,.15);
+        }
+        .info-bar-left { font-size: 11px; color: var(--muted); }
+        .info-bar-left strong { display: block; font-size: 12px; color: var(--text); font-weight: 600; }
+        .clock {
+            font-size: 22px; font-weight: 700;
+            color: var(--gold);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: .03em;
+        }
+
+        /* ── SECTION LABEL ─── */
+        .section-label {
+            font-size: 10px; font-weight: 600;
+            letter-spacing: .12em; text-transform: uppercase;
+            color: var(--muted);
+            padding: 0 2px;
+        }
+
+        /* ── ROOM CARD ─── */
+        .room-card {
+            background: rgba(255,255,255,.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            position: relative;
+            transition: transform .2s, box-shadow .2s;
+        }
+        .room-card:active { transform: scale(.985); }
+
+        .card-stripe {
+            height: 3px;
+            background: linear-gradient(90deg, var(--gold), var(--gold-lt));
+        }
+        .room-card.hoje .card-stripe {
+            background: linear-gradient(90deg, var(--green), #8EDD96);
+        }
+
+        .card-body { padding: 14px; }
+
+        .card-top {
+            display: flex; align-items: flex-start;
+            justify-content: space-between; gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .room-name {
+            font-size: 10px; font-weight: 600;
+            letter-spacing: .1em; text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 10px; border-radius: 99px;
+            font-size: 11px; font-weight: 600;
+            background: var(--panel); color: var(--muted);
+            border: 1px solid var(--border);
+            white-space: nowrap; flex-shrink: 0;
+        }
+        .status-badge.active {
+            background: var(--green-bg); color: var(--green-bdr);
+            border-color: #b8dfb8;
+        }
+        .status-badge.active::before {
+            content: ''; width: 5px; height: 5px;
+            background: var(--green); border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        .ev-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 16px; font-weight: 600;
+            color: var(--text); line-height: 1.3;
+            margin-bottom: 10px;
+        }
+        .ev-title.empty {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px; font-weight: 400;
+            font-style: italic; color: var(--muted);
+        }
+
+        .meta-list { display: flex; flex-direction: column; gap: 5px; }
+        .meta-item {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 12px; color: var(--muted);
+        }
+        .meta-item svg { width: 13px; height: 13px; flex-shrink: 0; opacity: .7; }
+
+        /* ── FOOTER ─── */
+        footer {
+            background: rgba(255,255,255,.92);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border);
+            padding: 12px 16px;
+            padding-bottom: calc(12px + env(safe-area-inset-bottom));
+            text-align: center;
+        }
+        footer p { font-size: 12px; color: var(--muted); }
+        footer a { color: var(--gold); font-weight: 600; text-decoration: none; }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+        /* ── SKELETON / LOADING ─── */
+        .skeleton {
+            background: linear-gradient(90deg, var(--panel) 25%, var(--border) 50%, var(--panel) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+        }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    </style>
+</head>
+<body>
+
+<video class="video-bg" autoplay muted loop playsinline>
+    <source src="{{ url_for('static', filename='VIDEOC.mp4') }}" type="video/mp4">
+</video>
+<div class="overlay"></div>
+
+<div class="shell">
+
+    <header>
+        <div class="brand">
+            <a href="/cadastro">
+                <img src="{{ url_for('static', filename='logo_1.png') }}" style="height:36px;opacity:.9;margin-right:2px;">
+            </a>
+            <div class="brand-bar"></div>
+            <div>
+                <h1>Espaços da SRA</h1>
+                <p>Coworking · Auditórios · Salas</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="live-dot">Ao vivo</div>
+            <a href="/cadastro" class="btn-admin">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+                Gerenciar
+            </a>
+        </div>
+    </header>
+
+    <div class="content" id="mainContent">
+
+        <div class="info-bar">
+            <div class="info-bar-left">
+                <strong id="dateFull">—</strong>
+                Atualização automática a cada 30s
+            </div>
+            <div class="clock" id="clock">--:--:--</div>
+        </div>
+
+        <div class="section-label">Espaços</div>
+
+        <div id="roomsGrid"></div>
+
+    </div>
+
+    <footer>
+        <p>Agendamentos: <a href="mailto:sra.es.ssc@gestao.gov.br">sra.es.ssc@gestao.gov.br</a></p>
+    </footer>
+
+</div>
+
+<script>
+const SALAS = {
+    "COWORKING":                 { key: "coworking",  label: "Coworking" },
+    "AUDITÓRIO MEZANINO":        { key: "mezanino",   label: "Sala de Reunião Mezanino" },
+    "AUDITÓRIO 8° ANDAR":        { key: "8andar",     label: "Auditório 8° Andar" },
+    "SALA 360°":                 { key: "sala360",    label: "Sala 360°" },
+    "SALA DE REUNIÃO 9° ANDAR":  { key: "9andar",     label: "Sala de Reunião 9° Andar" }
+};
+
+const WEEKDAYS = ["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
+const MONTHS   = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+
+function formatDate(d) {
+    if (!d) return "—";
+    const [y, m, day] = d.split("-");
+    return `${day}/${m}/${y}`;
+}
+
+function isHoje(dateStr) {
+    const hoje = new Date();
+    const ev   = new Date(dateStr + "T00:00");
+    return ev.getFullYear() === hoje.getFullYear() &&
+           ev.getMonth()    === hoje.getMonth()    &&
+           ev.getDate()     === hoje.getDate();
+}
+
+function buildRooms(data) {
+    const grid   = document.getElementById("roomsGrid");
+    const agora  = new Date();
+    grid.innerHTML = "";
+
+    Object.entries(SALAS).forEach(([sala, info]) => {
+        const proximos = data
+            .filter(e => {
+                if (e.sala !== sala) return false;
+                const fim = new Date(e.data + "T" + e.hora_fim);
+                fim.setMinutes(fim.getMinutes() + 5);
+                return fim > agora;
+            })
+            .sort((a, b) => new Date(a.data + "T" + a.hora_inicio) - new Date(b.data + "T" + b.hora_inicio));
+
+        const ev = proximos[0] || null;
+        const hoje = ev && isHoje(ev.data);
+
+        const card = document.createElement("div");
+        card.className = "room-card" + (hoje ? " hoje" : "");
+        card.style.marginBottom = "10px";
+
+        card.innerHTML = `
+            <div class="card-stripe"></div>
+            <div class="card-body">
+                <div class="card-top">
+                    <div class="room-name">${info.label}</div>
+                    <div class="status-badge${hoje ? " active" : ""}">
+                        ${hoje ? "Em uso hoje" : ev ? "Agendado" : "Disponível"}
+                    </div>
+                </div>
+                <div class="ev-title${ev ? "" : " empty"}">
+                    ${ev ? ev.evento.toUpperCase() : "À Agendar"}
+                </div>
+                <div class="meta-list">
+                    <div class="meta-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        ${ev ? formatDate(ev.data) : "—"}
+                    </div>
+                    <div class="meta-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        ${ev ? `${ev.hora_inicio} – ${ev.hora_fim}` : "—"}
+                    </div>
+                    <div class="meta-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        ${ev ? (ev.organizador || "SRA-ES") : "SRA-ES"}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        grid.appendChild(card);
+    });
+}
+
+async function atualizar() {
+    try {
+        const dados = await fetch("/eventos?t=" + Date.now()).then(r => r.json());
+        buildRooms(dados);
+    } catch (err) {
+        console.error("Erro ao atualizar:", err);
+    }
+}
+
+function tick() {
+    const now = new Date();
+    document.getElementById("clock").textContent = now.toLocaleTimeString("pt-BR", { hour12: false });
+
+    const wd  = WEEKDAYS[now.getDay()];
+    const day = now.getDate();
+    const mo  = MONTHS[now.getMonth()];
+    const yr  = now.getFullYear();
+    document.getElementById("dateFull").textContent =
+        `${wd.charAt(0).toUpperCase() + wd.slice(1)}, ${day} de ${mo} de ${yr}`;
+}
+
+setInterval(atualizar, 30000);
+setInterval(tick, 1000);
+atualizar();
+tick();
+</script>
+</body>
+</html>
